@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+    <link rel="stylesheet" href="/css/index.css">
+    <script src="/js/axios.min.js"></script>
+    <style>
+        html,body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            background-image: url("/image/img.png");
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-flow: column;
+            justify-content: center;
+        }
+
+        .login-wrapper {
+            display: flex;
+            justify-content: end;
+        }
+
+        .login-content {
+            width: 400px;
+            height: 420px;
+            background: rgba(0, 0, 0, 0.3);
+            margin-right: 300px;
+            position: relative;
+        }
+
+        .top-line {
+            background: #409eff;
+            width: 30px;
+            height: 3px;
+        }
+        .left-line {
+            background: #409eff;
+            width: 3px;
+            height: 30px;
+        }
+        .right-line {
+            background: #409eff;
+            width: 3px;
+            height: 30px;
+        }
+
+        .line-left-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .line-right-top {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+
+        .line-left-bottom {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+        }
+
+        .line-right-bottom {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+        }
+
+        .login-content .title {
+            height: 100px;
+            line-height: 100px;
+            text-align: center;
+            color: white;
+            font-size: 30px;
+            font-family: 楷体;
+        }
+
+        input[type=checkbox] {
+
+            position: relative;
+            top: 2px;
+            background: rgba(0, 0, 0, 0);
+        }
+
+        .el-checkbox__label {
+            font-size: 14px;
+            color: white;
+        }
+        .el-checkbox__inner {
+            background: rgba(0, 0, 0, 0) !important;
+            border: 1px solid #409eff !important;
+        }
+        .el-checkbox__inner::after {
+            color: #409eff !important;
+        }
+        .el-input__inner {
+            background: rgba(0, 0, 0, 0) !important;
+            border: 1px solid #409eff !important;
+            border-left: unset !important;
+            color: white !important;
+        }
+        .el-input-group__append, .el-input-group__prepend {
+            background: rgba(0, 0, 0, 0) !important;
+            border: 1px solid #409eff !important;
+            border-right: unset !important;
+            color: #409eff !important;
+        }
+
+    </style>
+</head>
+<body>
+<div class="login-wrapper" id="app">
+    <div class="login-content">
+        <div class="title">多人聊天程序</div>
+        <div style="width: 80%; margin: 0 auto;">
+            <el-input placeholder="账号" v-model="account">
+                <template slot="prepend">
+                    <i class="el-icon-user"/>
+                </template>
+            </el-input>
+        </div>
+        <div style="width: 80%; margin: 0 auto; margin-top: 20px;">
+            <el-input placeholder="密码" type="password" v-model="password">
+                <template slot="prepend">
+                    <i class="el-icon-lock"/>
+                </template>
+            </el-input>
+        </div>
+
+        <div style="width: 80%; margin: 0 auto; margin-top: 10px; display: flex; justify-content: space-between;">
+
+        </div>
+        <div style="width: 80%; margin: 0 auto; margin-top: 20px;">
+            <el-button @click="handlerLogin" style="width: 100%; font-size: 20px; font-family: 楷体" type="primary">登录</el-button>
+        </div>
+
+        <div style="width: 80%; margin: 0 auto; margin-top: 20px;">
+            <el-button @click="handlerRegister" style="width: 100%; font-size: 20px; font-family: 楷体">去注册</el-button>
+        </div>
+
+        <div class="line-left-top top-line"></div>
+        <div class="line-left-top left-line"></div>
+
+        <div class="line-right-top top-line"></div>
+        <div class="line-right-top right-line"></div>
+
+        <div class="line-left-bottom top-line"></div>
+        <div class="line-left-bottom left-line"></div>
+
+        <div class="line-right-bottom top-line"></div>
+        <div class="line-right-bottom right-line"></div>
+    </div>
+</div>
+<script src="/js/vue.js"></script>
+<script src="/js/index.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                account: "",
+                password: "",
+
+            }
+        },
+        methods: {
+            handlerRegister() {
+                window.location.href = "register.html";
+            },
+
+            handlerLogin() {
+                if (!this.account) {
+                    this.$message.warning("请输入账号");
+                    return;
+                }
+                if (!this.password) {
+                    this.$message.warning("请输入密码");
+                    return;
+                }
+
+                let params = {account: this.account, password: this.password};
+
+                axios.post("/user/login", params, {headers: {"Content-Type": "application/json"}}).then((res) => {
+                    let data = res.data;
+                    if (data.code !== 200) {
+                        this.$message.warning(data.msg);
+                        return;
+                    }
+                    this.$message.success(data.msg);
+                    setTimeout(() => {
+                        window.location.href = "/";
+                    }, 800);
+                });
+            }
+        }
+
+    })
+</script>
+</body>
+</html>

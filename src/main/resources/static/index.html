@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>多人聊天程序</title>
+
+    <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/indexX.css">
+    <script src="/js/axios.min.js"></script>
+    <style>
+        .friendUser {
+            height: 60px;
+            width: 60px;
+            line-height: 60px;
+            border-radius: 50%;
+            overflow: auto;
+            border: 1px solid #c0c0c0;
+        }
+
+        .icon {
+            height: 100px;
+            width: 100px;
+            line-height: 100px;
+            border-radius: 50%;
+            overflow: auto;
+            border: 1px solid #c0c0c0;
+        }
+
+        .el-tabs {
+            height: 100%;
+        }
+
+        .el-tabs__content {
+            height: calc(100% - 40px);
+        }
+
+        .el-tab-pane {
+            height: 100%;
+        }
+
+        .userList {
+            height: calc(100% - 20px);
+            overflow: auto;
+        }
+        .icon {
+            height: 120px;
+            width: 120px;
+            line-height: 120px;
+            border-radius: 50%;
+            overflow: auto;
+            border: 1px solid #c0c0c0;
+        }
+        .avatar-uploader-icon {
+            height: 120px;
+            width: 120px;
+            line-height: 120px;
+            border-radius: 50%;
+            overflow: auto;
+            border: 1px solid #c0c0c0;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="main-box">
+        <div class="main-item-box">
+            <div style="width: 300px; border-right: 1px solid #c0c0c0; display: flex; flex-flow: column;">
+                <div style="display: flex; justify-content: center; margin-top: 30px;">
+                    <img v-if="user.icon" :src="user.icon" class="avatar icon">
+                </div>
+                <div style="text-align: center; margin-top: 20px; display: flex; justify-content: space-around;">
+                    <div>账号： {{user.account}}</div>
+                    <div>
+                        <el-button @click="toDetail" size="mini" type="warning">详情</el-button>
+                        <el-button @click="loginOut" size="mini" type="danger">退出</el-button>
+                    </div>
+                </div>
+                <div style="padding: 10px; box-sizing: border-box; flex: 1">
+                    <el-tabs type="card">
+                        <el-tab-pane label="聊天室中心">
+                            <div class="userList">
+                                <el-card @click.native="showRoom(item)" style="margin-bottom: 10px; cursor: pointer;"
+                                         v-for="item in roomData" :key="item.id">
+                                    <div style="display: flex;">
+                                        {{item.name}}
+                                    </div>
+                                </el-card>
+                                <el-empty v-if="roomData.length === 0"/>
+                            </div>
+                        </el-tab-pane>
+                        <el-tab-pane label="我的聊天室">
+                            <div class="userList">
+                                <el-button @click="handlerShowEditRoom" size="mini" type="primary" style="width: 100%">
+                                    新增
+                                </el-button>
+                                <el-card @click.native="showRoom(item)" style="margin-top: 10px; cursor: pointer;"
+                                         v-for="item in selfRoom" :key="item.id">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <div>{{item.name}}</div>
+                                        <el-button @click.stop="handlerDelete(item)" size="mini" type="warning">删除
+                                        </el-button>
+                                    </div>
+                                </el-card>
+                                <el-empty v-if="selfRoom.length === 0"/>
+                            </div>
+                        </el-tab-pane>
+                    </el-tabs>
+                </div>
+            </div>
+
+            <div v-if="showDetail">
+                <div v-if="showEdit" style="width: 500px; margin: 0 auto;">
+                    <div style="display: flex; justify-content: center; margin: 30px auto; position:relative;">
+                        <div style="position: absolute; top: -10px; right: 160px; cursor: pointer" @click="removeIcon"><i class="el-icon-error"></i></div>
+                        <el-upload
+                                class="avatar-uploader"
+                                action="/file/upload"
+                                :show-file-list="false"
+                                :on-success="handleUploadIcon">
+                            <img v-if="updateUser.icon" :src="updateUser.icon" class="avatar icon">
+                            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                        </el-upload>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <el-input placeholder="账号" disabled v-model="updateUser.account"></el-input>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <el-input placeholder="密码" type="password" v-model="updateUser.password"></el-input>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <el-input placeholder="个人简介" type="textarea" :rows="4" resize="none" v-model="updateUser.remark"></el-input>
+                    </div>
+                </div>
+                <div v-else>
+                    <div style="display: flex; justify-content: center; margin-top: 100px;">
+                        <img v-if="user.icon" :src="user.icon" class="avatar icon">
+                    </div>
+                    <div style="text-align: center; margin-top: 20px; display: flex; justify-content: space-around;">
+                        <div>账号： {{user.account}}</div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px; display: flex; justify-content: space-around;">
+                        <div>个人简介：
+                            <span v-if="user.remark">{{user.remark}}</span>
+                            <span v-else>暂无个人简介</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: center; margin-top: 100px;">
+                    <el-button @click="handlerEdit" type="primary">{{showEdit ? '编辑' : '去编辑'}}</el-button>
+                    <el-button @click="toHandlerClose" type="danger">{{showEdit ? '返回' : '关闭'}}</el-button>
+                </div>
+            </div>
+            <div v-else style="flex: 1">
+
+                <div v-if="!selectRoom.name"
+                     style="height: 100%; display: flex; justify-content: center; flex-flow: column;">
+                    <el-empty/>
+                </div>
+
+                <div v-if="selectRoom.name" style="height: 100%;">
+                    <el-card>
+                        <div style="display: flex;">
+                            <div style="margin-left: 20px; font-size: 20px; height: 60px; line-height: 60px;">聊天室：
+                                {{selectRoom.name}}
+                            </div>
+                        </div>
+                    </el-card>
+
+                    <div style="height: calc(100% - 145px); overflow:auto; padding: 0 10px; box-sizing: border-box;">
+                        <div v-if="commentData.length === 0"
+                             style="display: flex; justify-content: center; flex-flow: column; height: 100%">
+                            <el-empty></el-empty>
+                        </div>
+                        <div v-for="(item, index) in commentData" :key="index" style="display: flex; margin-top: 10px;">
+                            <div v-if="user.account === item.account"
+                                 style="display: flex; justify-content: end; width: 100%">
+                                <div style="display: flex; justify-content: end; background: #FFFFFF; padding: 10px; padding-left: 30px;">
+                                    <div style="margin-right: 30px;">
+                                        <div style="color: #c0c0c0">{{item.createTime}}</div>
+                                        <div v-if="item.type === 'txt'" style="margin-top: 10px;">{{item.content}}</div>
+                                        <div v-if="item.type === 'img'" style="margin-top: 10px;">
+                                            <img :src="item.content" style="height: 100px"/>
+                                        </div>
+                                        <div v-if="item.type === 'music'" style="margin-top: 10px;">
+                                            <audio ref="music" :id="'music' + index" controls preload="auto">
+                                                <source :src="item.content" type="audio/mpeg">
+                                            </audio>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span v-if="!item.icon">{{item.account}}</span>
+                                        <img v-else class="friendUser" :src="item.icon"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else>
+                                <div style="display: flex; justify-content: start; background: #FFFFFF; padding: 10px; padding-right: 30px;">
+                                    <div>
+                                        <span v-if="!item.icon">{{item.account}}</span>
+                                        <img v-else class="friendUser" :src="item.icon"/>
+                                    </div>
+                                    <div style="margin-left: 30px;">
+                                        <div style="color: #c0c0c0">{{item.createTime}}</div>
+                                        <div v-if="item.type === 'txt'">{{item.content}}</div>
+                                        <div v-if="item.type === 'img'">
+                                            <img :src="item.content" style="height: 100px"/>
+                                        </div>
+                                        <div v-if="item.type === 'music'" style="margin-top: 10px;">
+                                            <audio ref="music" :id="'music' + index" controls preload="auto">
+                                                <source :src="item.content" type="audio/mpeg">
+                                            </audio>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="height: 100px;"></div>
+                    </div>
+                    <div style="height: 60px; display: flex; width: 100%; margin-left: 10px;">
+                        <div style="flex: 1;">
+                            <el-input placeholder="请输入内容" v-model="content"
+                                      class="input-with-select"></el-input>
+                        </div>
+                        <div style="width: 60px;">
+                            <el-button @click="sendHandler" size="mini" type="primary" style="height: 40px"
+                                       icon="el-icon-thumb"></el-button>
+                        </div>
+                        <div style="width: 60px;">
+                            <el-upload
+                                    class="avatar-uploader"
+                                    action="/file/upload"
+                                    :show-file-list="false"
+                                    :on-success="handleUpload">
+                                <el-button size="mini" type="primary" style="height: 40px"
+                                           icon="el-icon-picture-outline"></el-button>
+                            </el-upload>
+                        </div>
+                        <div style="width: 60px;">
+                            <el-button @click="sendMusicHandler" size="mini" type="primary" style="height: 40px"
+                                       icon="el-icon-headset"></el-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <el-dialog
+            title="sound recording"
+            :close-on-click-modal="false"
+            :visible.sync="sendMusic"
+            width="600px"
+            :before-close="cancelMusic">
+        <div style="text-align: center; font-size: 30px;">
+            录音中。。。
+        </div>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="cancelMusic">关闭录音</el-button>
+          <el-button type="primary" @click="handlerSubmitMusic">发送录音</el-button>
+        </span>
+    </el-dialog>
+
+    <el-dialog
+            title="新增聊天室"
+            :visible.sync="showRoomFlag"
+            width="600px"
+            :close-on-click-modal="false"
+            :before-close="() => {showRoomFlag = false}">
+        <div>
+            <el-form :model="form" :rules="rules" ref="form" label-width="12    0px" class="demo-form">
+                <el-form-item label="聊天室名称" prop="name">
+                    <el-input v-model="form.name"/>
+                </el-form-item>
+            </el-form>
+        </div>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="() => {showRoomFlag = false}">关闭</el-button>
+          <el-button type="primary" @click="handlerSubmit">确认</el-button>
+        </span>
+    </el-dialog>
+
+</div>
+<script src="/js/vue.js"></script>
+<script src="/js/index.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                updateUser: "",
+                showEdit: false,
+                showDetail: false,
+                sendMusic: false,
+                isLogin: false,
+                user: {},
+                content: "",
+                data: [],
+                roomData: [],
+                selfRoom: [],
+                status: "",
+                commentData: [],
+                selectRoom: {},
+                showRoomFlag: false,
+                form: {},
+                rules: {
+                    name: [{required: true, message: '请输入聊天室名称', trigger: 'blur'},],
+                },
+                recordedBlobs: [],
+                mediaRecorder: null,
+            }
+        },
+        methods: {
+            removeIcon() {
+              this.$set(this.updateUser, 'icon', null);
+            },
+            handlerEdit() {
+                if (!this.showEdit) {
+                    this.showEdit = true;
+                    return;
+                }
+
+                if (!this.updateUser.密码) {
+                    this.$message.warning("请输入密码");
+                    return;
+                }
+
+                axios.post("/user/update", this.updateUser, {headers: {"Content-Type": "application/json"}}).then((res) => {
+                    let data = res.data;
+                    if (data.code !== 200) {
+                        this.$message.warning(data.msg);
+                        return;
+                    }
+                    this.$message.success("更新成功");
+                    this.onloadAuth();
+                    this.showEdit = false;
+                });
+            },
+            handleUploadIcon(res) {
+                let data = res.data;
+                if (res.code !== 200) {
+                    this.$message.warning("文件上传失败");
+                    return;
+                }
+                this.$set(this.updateUser, 'icon', data);
+            },
+            toHandlerClose() {
+                if (this.showEdit) {
+                    this.showEdit = false;
+                    return;
+                }
+                this.showDetail = false;
+            },
+            toDetail() {
+                this.showEdit = false;
+                this.showDetail = true;
+            },
+            sendMusicHandler() {
+                navigator.mediaDevices.getUserMedia({audio: true})
+                    .then(stream => {
+                        this.mediaRecorder = new MediaRecorder(stream);
+                        this.recordedBlobs = [];
+
+                        this.mediaRecorder.ondataavailable = event => {
+                            if (event.data && event.data.size > 0) {
+                                this.recordedBlobs.push(event.data);
+                            }
+                        };
+
+                        this.mediaRecorder.start();
+                        this.sendMusic = true;
+                    })
+                    .catch(err => {
+                        this.$message.warning("暂无录音权限");
+                    });
+            },
+            handlerSubmitMusic() {
+                this.mediaRecorder.stop();
+                setTimeout(() => {
+                    let superBuffer = new Blob(this.recordedBlobs, {type: 'audio/wav'});
+                    const formData = new FormData();
+                    formData.append("file", superBuffer, new Date().getTime() + '.wav');
+
+                    axios.post('/file/upload', formData, {headers: {"Content-Type": "multipart/form-data"}}).then(res => {
+                        let data = res.data;
+                        if (data.code !== 200) {
+                            this.$message.warning("文件上传失败");
+                            return;
+                        }
+
+                        let comment = {
+                            content: data.data,
+                            roomId: this.selectRoom.id,
+                            type: "music",
+                        };
+
+                        axios.post("/comment/save", comment, {headers: {"Content-Type": "application/json"}}).then(() => {
+                            this.$message.success("发送成功");
+                            this.sendMusic = false;
+                        });
+                    });
+                }, 300);
+            },
+            cancelMusic() {
+                this.mediaRecorder.stop();
+                this.sendMusic = false;
+            },
+            handlerDelete(room) {
+                ELEMENT.MessageBox.confirm(
+                    `确认删除该聊天室吗?`,
+                    '提示', {
+                        confirmButtonText: '确认',
+                        cancelButtonText: '取消',
+                        type: "warning",
+                    }
+                ).then(() => {
+                    return axios.get(`/room/delete`, {params: {id: room.id}});
+                }).then(() => {
+                    this.selectRoom = {};
+                    ELEMENT.Message({message: "删除成功", type: 'success'});
+                    this.onloadRoom();
+                });
+            },
+            handlerSubmit() {
+                this.$refs["form"].validate((valid) => {
+                    if (!valid) {
+                        return;
+                    }
+
+                    axios.post("/room/save", this.form, {headers: {"Content-Type": "application/json"}}).then((res) => {
+                        if (res.data.code === 400) {
+                            ELEMENT.Message({message: res.data.msg, type: 'warning'});
+                            return;
+                        }
+                        ELEMENT.Message({message: "添加成功", type: 'success'});
+                        this.showRoomFlag = false;
+                        this.onloadRoom();
+                    });
+                });
+            },
+            handlerShowEditRoom() {
+                this.form = {};
+                this.showRoomFlag = true;
+            },
+            handleUpload(res) {
+                let data = res.data;
+                if (res.code !== 200) {
+                    this.$message.warning("文件上传失败");
+                    return;
+                }
+
+                let comment = {
+                    content: data,
+                    roomId: this.selectRoom.id,
+                    type: "img",
+                };
+
+                axios.post("/comment/save", comment, {headers: {"Content-Type": "application/json"}}).then(() => {
+                    this.$message.success("Sent successfully");
+                });
+            },
+            sendHandler() {
+                if (!this.content) {
+                    this.$message.warning("请输入内容");
+                    return;
+                }
+
+                let comment = {
+                    content: this.content,
+                    roomId: this.selectRoom.id,
+                    type: "txt",
+                };
+
+                this.content = "";
+                axios.post("/comment/save", comment, {headers: {"Content-Type": "application/json"}}).then(() => {
+                    this.$message.success("发送成功");
+                });
+            },
+            loginOut() {
+                axios.get(`/user/loginOut`, {}).then(() => {
+                    this.$message({message: '退出成功', type: 'success'});
+                    setTimeout(() => {
+                        window.location.href = "/login.html";
+                    }, 800);
+                });
+            },
+            showRoom(room) {
+                this.showDetail = false;
+                this.selectRoom = room;
+            },
+            onloadAuth() {
+                axios.get("/user/current", {}).then((res) => {
+                    let data = res.data;
+                    if (data.code !== 200) {
+                        this.$message.warning("用户未登录");
+                        setTimeout(() => {
+                            window.location.href = "/login.html";
+                        }, 800);
+                        return;
+                    }
+                    this.isLogin = true;
+                    this.user = data.data;
+                    this.updateUser = JSON.parse(JSON.stringify(this.user));
+                });
+            },
+            onloadRoom() {
+                axios.get("/room/self/list", {}).then((res) => {
+                    this.selfRoom = res.data.data;
+                });
+
+                axios.get("/room/list", {}).then((res) => {
+                    this.roomData = res.data.data;
+                });
+            },
+            onloadComment() {
+                setInterval(() => {
+                    if (!this.selectRoom.name) {
+                        return;
+                    }
+
+                    axios.get("/comment/list", {params: {roomId: this.selectRoom.id}}).then((res) => {
+                        this.commentData = res.data.data;
+                    });
+                }, 300);
+            },
+        },
+        created() {
+            this.onloadAuth();
+            this.onloadRoom();
+            this.onloadComment();
+        }
+    })
+</script>
+</body>
+</html>

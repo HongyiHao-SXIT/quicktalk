@@ -1,0 +1,45 @@
+.main-box {
+    width: 80%;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    flex-flow: column;
+}
+.main-item-box {
+    background: rgb(241, 245, 254);
+    height: 80%;
+    width: 100%;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    display: flex;
+}
+
+.main-item-box > div {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    width: 90%;
+    margin: 0 auto;
+}
+
+.top {
+    height: 80px;
+}
+
+.top > div {
+    text-align: center;
+    font-size: 20px;
+    line-height: 80px;
+    height: 80px;
+}
+
+.login-status {
+    display: flex;
+    justify-content: center;
+    flex-flow: column;
+}
+
+.content {
+}
+

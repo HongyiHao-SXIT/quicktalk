@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册</title>
+
+    <link rel="stylesheet" href="css/common.css">
+
+    <link rel="stylesheet" href="/css/index.css">
+    <script src="/js/axios.min.js"></script>
+
+    <style>
+
+        html,body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            background-image: url("/image/img_1.png");
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-flow: column;
+            justify-content: center;
+        }
+
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+        }
+
+        .login-content {
+            width: 350px;
+            height: 340px;
+            position: relative;
+        }
+
+        .login-content .title {
+            height: 60px;
+            line-height: 60px;
+            font-size: 30px;
+        }
+
+        input[type=checkbox] {
+
+            position: relative;
+            top: 2px;
+            background: rgba(0, 0, 0, 0);
+        }
+
+        .el-checkbox__label {
+            font-size: 14px;
+            color: white;
+        }
+        .el-checkbox__inner {
+            background: rgba(0, 0, 0, 0) !important;
+            border: 1px solid #409eff !important;
+        }
+        .el-checkbox__inner::after {
+            color: #409eff !important;
+        }
+        .el-input__inner {
+            background: rgba(255, 255, 255, 0.8) !important;
+            border: 1px solid rgba(0, 0, 0, 0) !important;
+            color: #000 !important;
+        }
+        .icon {
+            height: 80px;
+            width: 80px;
+            line-height: 80px;
+            border-radius: 50%;
+            overflow: auto;
+            border: 1px solid #c0c0c0;
+        }
+        .avatar-uploader-icon {
+            height: 80px;
+            width: 80px;
+            line-height: 80px;
+            border-radius: 50%;
+            overflow: auto;
+            border: 1px solid #c0c0c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper" id="app">
+        <div class="login-content" style="margin-top: 100px;">
+            <div class="title-hint" style="font-weight: 700">多人聊天程序</div>
+            <div style="display: flex; justify-content: center; margin-top: 30px;">
+                <el-upload
+                        class="avatar-uploader"
+                        action="/file/upload"
+                        :show-file-list="false"
+                        :on-success="handleUpload">
+                    <img v-if="icon" :src="icon" class="avatar icon">
+                    <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                </el-upload>
+            </div>
+            <div style="margin-top: 20px;">
+                <el-input placeholder="账号" v-model="account"></el-input>
+            </div>
+            <div style="margin-top: 20px;">
+                <el-input placeholder="密码" type="password" v-model="password"></el-input>
+            </div>
+            <div style="margin-top: 20px;">
+                <el-input placeholder="个人简介" type="textarea" :rows="4" resize="none" v-model="remark"></el-input>
+            </div>
+            <div style="margin-top: 30px;">
+                <el-button @click="registerHandler" style="width: 100%;" type="primary">注册</el-button>
+            </div>
+            <div style="margin-top: 10px;">
+                <el-button @click="loginHandler" style="width: 100%;">去登录</el-button>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="/js/vue.js"></script>
+<script src="/js/index.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                icon: "",
+                account: "",
+                password: "",
+                remark: "",
+            }
+        },
+        methods: {
+            handleUpload(res) {
+                let data = res.data;
+                if (res.code !== 200) {
+                    this.$message.warning("文件上传失败");
+                    return;
+                }
+                this.$set(this, 'icon', data);
+            },
+
+            loginHandler() {
+                window.location.href = "login.html";
+            },
+
+            registerHandler() {
+                if (!this.account) {
+                    this.$message.warning("请输入账号");
+                    return;
+                }
+                if (!this.password) {
+                    this.$message.warning("请输入密码");
+                    return;
+                }
+
+                let params = {account: this.account, password: this.password, icon: this.icon, remark: this.remark};
+
+                axios.post("/user/register", params, {headers: {"Content-Type": "application/json"}}).then((res) => {
+                    let data = res.data;
+                    if (data.code !== 200) {
+                        this.$message.warning(data.msg);
+                        return;
+                    }
+                    this.$message.success(data.msg);
+                    setTimeout(() => {
+                        window.location.href = "/login.html";
+                    }, 800);
+                });
+            }
+        }
+    })
+</script>
+</html>
