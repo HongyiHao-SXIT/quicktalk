@@ -1,7 +1,7 @@
-package com.quicktalk.quicktalk.controller;
+package com.controller;
 
-import com.quicktalk.quicktalk.common.api.R;
-import com.quicktalk.quicktalk.common.exception.ServiceException;
+import com.common.api.R;
+import com.common.exception.ServiceException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

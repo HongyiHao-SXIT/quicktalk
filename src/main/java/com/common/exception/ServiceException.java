@@ -1,8 +1,8 @@
-package com.quicktalk.quicktalk.common.exception;
+package com.common.exception;
 
 
-import com.quicktalk.quicktalk.common.api.IResultCode;
-import com.quicktalk.quicktalk.common.api.ResultCode;
+import com.common.api.IResultCode;
+import com.common.api.ResultCode;
 
 
 public class ServiceException extends RuntimeException {

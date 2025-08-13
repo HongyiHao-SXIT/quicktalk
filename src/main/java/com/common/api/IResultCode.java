@@ -1,4 +1,4 @@
-package com.quicktalk.quicktalk.common.api;
+package com.common.api;
 
 import java.io.Serializable;
 

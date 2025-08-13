@@ -1,11 +1,11 @@
-package com.quicktalk.quicktalk.common.utils;
+package com.common.utils;
 
-import com.quicktalk.quicktalk.common.exception.ServiceException;
-import com.quicktalk.quicktalk.entity.User;
+import com.common.exception.ServiceException;
+import com.entity.User;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 
 
